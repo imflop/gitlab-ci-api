@@ -30,7 +30,7 @@ Response
 
 ```json
 {
-    "code": "202",
+    "code": 202,
     "status": "Accepted",
     "message": "Branch remove, current port release"
 }
