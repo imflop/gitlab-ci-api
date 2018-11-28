@@ -45,39 +45,43 @@ class DbMixin:
         db.delete(branch)
 
 
-@api.route('/api/v1/create')
+@api.route('/api/v1/create/<project>/<ip>')
 class Create(Resource, DbMixin):
-    def post(self) -> dict:
-        branch = api.payload.get('branch')
-        ip = api.payload.get('ip')
-        if self.is_ip_exists(ip):
-            if self.is_branch_exists(branch):
-                project_data = self.get_project_meta_by_branch(branch)
-                port = project_data['port']
-                response = ResponseObject(code=304, status='Not Modified', ip=ip, port=port,
-                                          message='Branch already exists on current port')
+    def get(self, project, ip) -> dict:
+        if project and ip:
+            raw_data = project.split('.')
+            project_name = raw_data[0]
+            branch = f'{raw_data[2]}/{raw_data[1]}'
+            if self.is_ip_exists(ip):
+                if self.is_branch_exists(branch):
+                    project_data = self.get_project_meta_by_branch(branch)
+                    port = project_data['port']
+                    response = ResponseObject(code=304, status='Not Modified', ip=ip, port=port,
+                                              message='Branch already exists on current port')
+                else:
+                    port = self.get_first_free_port_by_ip(ip)
+                    project_data = self._create_project_dict(ip, port, project_name)
+                    self.set_project_meta_to_branch(branch, project_data)
+                    response = ResponseObject(code=201, status='Created', ip=ip, port=port,
+                                              message='New record successfully created')
             else:
+                self.set_ports_to_ip(ip)
                 port = self.get_first_free_port_by_ip(ip)
-                project_data = dict(
-                    created_at=datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
-                    ip=ip,
-                    port=port
-                )
+                project_data = self._create_project_dict(ip, port, project_name)
                 self.set_project_meta_to_branch(branch, project_data)
                 response = ResponseObject(code=201, status='Created', ip=ip, port=port,
                                           message='New record successfully created')
         else:
-            self.set_ports_to_ip(ip)
-            port = self.get_first_free_port_by_ip(ip)
-            project_data = dict(
-                created_at=datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
-                ip=ip,
-                port=port
-            )
-            self.set_project_meta_to_branch(branch, project_data)
-            response = ResponseObject(code=201, status='Created', ip=ip, port=port,
-                                      message='New record successfully created')
+            response = ResponseObject(code=404, status='Not Found')
         return response.as_dict()
+
+    def _create_project_dict(self, ip: int, port: int, project_name: str) -> dict:
+        return dict(
+            created_at=datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
+            ip=ip,
+            port=port,
+            project_name=project_name
+        )
 
 
 @api.route('/api/v1/delete')

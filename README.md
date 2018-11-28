@@ -3,9 +3,9 @@
 ### 1 Создать запись в бд - получить ответ
 
 
-Request POST
+Request GET
 
-`http post url:5000/api/v1/create branch=feature/branch-name ip=127.0.0.1`
+`http get url:5000/api/v1/create/project_name.some-branch-name.feature.btc-s.ru/127.0.0.1`
 
 Response
 
