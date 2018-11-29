@@ -19,6 +19,27 @@ Response
 }
 ```
 
+If data already exists Response would be
+
+```json
+{
+    "code": 304,
+    "status": "Not Modified",
+    "ip": "127.0.0.1",
+    "port": 8100,
+    "message": "Branch already exists on port"
+}
+```
+
+If params is missing Response would be
+
+```json
+{
+    "code": 400,
+    "status": "Bad Request"
+}
+```
+
 
 ### 2 Удалить запись, освободить порт - получить ответ
 

@@ -77,7 +77,7 @@ class Create(Resource, DbMixin):
                 project_data = self.get_project_meta_by_branch(branch)
                 port = project_data['port']
                 response = ResponseObject(code=304, status='Not Modified', ip=ip, port=port,
-                                          message='Branch already exists on current port')
+                                          message='Branch already exists on port')
             else:
                 port = self.get_first_free_port_by_ip(ip)
                 project_data = self._create_project_dict(ip, port, project_name, project)
