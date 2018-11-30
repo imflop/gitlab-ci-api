@@ -36,7 +36,7 @@ class DbMixin:
         return json.loads(db.get(branch))
 
     def get_ports_by_ip(self, ip: str) -> dict:
-        return json.dumps(db.get(ip))
+        return json.loads(db.get(ip))
 
     def get_first_free_port_by_ip(self, ip: str) -> int:
         ports = json.loads(db.get(ip))
@@ -116,7 +116,7 @@ class Delete(Resource, DbMixin):
         branch = api.payload.get('branch')
         if self.is_branch_exists(branch) and self.is_ip_exists(ip):
             data = self.get_project_meta_by_branch(branch)
-            port = data['port']
+            port = str(data['port'])
             ports = self.get_ports_by_ip(ip)
             ports[port] = True
             self.set_released_port(ip, ports)
@@ -128,7 +128,7 @@ class Delete(Resource, DbMixin):
         return response.as_dict()
 
     def _remove_conf(self, data: dict) -> None:
-        filename = f'{data["server_name"].split(".")[0]}.{data["server_name"].split(".")[1]}'
+        filename = f'{data["server_name"].split(".")[0]}.{data["server_name"].split(".")[1]}.conf'
         file_path = f'nginx_templates/{filename}'
         if os.path.isfile(file_path):
             os.remove(file_path)
