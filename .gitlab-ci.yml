@@ -11,7 +11,7 @@ master:build:
     - cd /home/gitlab-runner/master/
     - cp -f app/_CI/docker-compose.yml .
     - echo ***************** RUN  BUILD **************************
-    - docker-compose -p rspp_dev up -d --build
+    - docker-compose -p api_master up -d --build
     - echo ******************* REMOVE OLD IMG *****************
     - docker image prune --filter dangling=true -f
   only:
