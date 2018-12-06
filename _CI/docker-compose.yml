@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  redis:
+    restart: always
+    image: redis:latest
+    volumes:
+      - ./rs_data:/data/
+    networks:
+      net:
+        aliases:
+          - redis
+
+  python:
+    restart: always
+    image: api
+    build:
+      context: ./
+      dockerfile: ./app/_CI/Dockerfile
+    command: python /app/api.py
+     ports:
+      - "5000:5000"
+    volumes:
+      - ./app/:/app
+      - /etc/nginx/api-enabled/:/app/nginx_configs
+      - /etc/nginx/api-templates/:/app/nginx_templates
+      - /etc/nginx/api-flags/:/app/nginx_flags
+    depends_on:
+      - redis
+    networks:
+      net:
+        aliases:
+          - python
+
+networks:
+  net:
+    driver: bridge
+
+
+
