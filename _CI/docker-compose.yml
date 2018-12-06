@@ -18,7 +18,7 @@ services:
       context: ./
       dockerfile: ./app/_CI/Dockerfile
     command: python /app/api.py
-     ports:
+    ports:
       - "5000:5000"
     volumes:
       - ./app/:/app
