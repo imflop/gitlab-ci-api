@@ -10,7 +10,6 @@ master:build:
     - echo ***************** BUILD ENV *****************************
     - cd /home/gitlab-runner/master/
     - cp -f app/_CI/docker-compose.yml .
-    - chmod a+x app/_CI/docker-entrypoint*
     - echo ***************** RUN  BUILD **************************
     - docker-compose -p rspp_dev up -d --build
     - echo ******************* REMOVE OLD IMG *****************
