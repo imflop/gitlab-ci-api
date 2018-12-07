@@ -2,3 +2,5 @@
 *.pyc
 .idea/
 nginx_templates/*.conf
+nginx_configs
+nginx_flags
