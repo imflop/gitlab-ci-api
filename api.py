@@ -6,11 +6,14 @@ from flask import Flask
 from flask_restplus import Api, Resource
 from jinja2 import Environment, FileSystemLoader
 
+CONFIG_FOLDER_NAME = 'nginx_configs'
+TEMPLATE_FOLDER_NAME = 'nginx_templates'
+FLAG_FOLDER_NAME = 'nginx_flags'
 
 app = Flask(__name__)
 api = Api(app)
 db = redis.StrictRedis(host='localhost', port=6379, db=1)
-env = Environment(loader=FileSystemLoader('nginx_templates'))
+env = Environment(loader=FileSystemLoader(TEMPLATE_FOLDER_NAME))
 template = env.get_template('server.tpl')
 
 
@@ -63,8 +66,10 @@ class ResponseObject:
 
 
 @api.route('/api/v1/create/<project>/<ip>')
+@api.param('project', 'Full url of project with branch')
+@api.param('ip', 'The ip address')
 class Create(Resource, DbMixin):
-    def get(self, project, ip) -> dict:
+    def get(self, project=None, ip=None) -> dict:
         if project and ip:
             raw_data = project.split('.')
             project_name = raw_data[0]
@@ -101,8 +106,20 @@ class Create(Resource, DbMixin):
     def _write_data(self, data: dict) -> None:
         conf = template.render(**data)
         filename = f'{data["server_name"].split(".")[0]}.{data["server_name"].split(".")[1]}'
-        with open(f'nginx_templates/{filename}.conf', "w") as f:
+
+        if not os.path.exists(CONFIG_FOLDER_NAME):
+            os.makedirs(CONFIG_FOLDER_NAME)
+
+        with open(f'{CONFIG_FOLDER_NAME}/{filename}.conf', 'w') as f:
             f.write(conf)
+            self.__crete_flag_file()
+
+    def __crete_flag_file(self) -> None:
+        if not os.path.exists(FLAG_FOLDER_NAME):
+            os.makedirs(FLAG_FOLDER_NAME)
+
+        with open(f'{FLAG_FOLDER_NAME}/reload', 'w') as f:
+                f.write(str(True))
 
 
 @api.route('/api/v1/delete')
@@ -129,7 +146,7 @@ class Delete(Resource, DbMixin):
 
     def _remove_conf(self, data: dict) -> None:
         filename = f'{data["server_name"].split(".")[0]}.{data["server_name"].split(".")[1]}.conf'
-        file_path = f'nginx_templates/{filename}'
+        file_path = f'{CONFIG_FOLDER_NAME}/{filename}'
         if os.path.isfile(file_path):
             os.remove(file_path)
 
