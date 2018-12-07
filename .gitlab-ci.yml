@@ -1,0 +1,22 @@
+stages:
+  - master build
+
+master:build:
+  stage: master build
+  script:
+    - mkdir -p /home/gitlab-runner/master
+    - if [ -e "/home/gitlab-runner/master/docker-compose.yml" ]; then docker-compose -f /home/gitlab-runner/master/docker-compose.yml -p api_master down && docker run -t -v /home/gitlab-runner/master/app:/app alpine /bin/sh -c "rm -rf /app/*" && rm -f /home/gitlab-runner/master/docker-compose.yml; else mkdir -p /home/gitlab-runner/master/app; fi
+    - rsync -a --include=".*" ./ /home/gitlab-runner/master/app
+    - echo ***************** BUILD ENV *****************************
+    - cd /home/gitlab-runner/master/
+    - cp -f app/_CI/docker-compose.yml .
+    - echo ***************** RUN  BUILD **************************
+    - docker-compose -p api_master up -d --build
+    - echo ******************* REMOVE OLD IMG *****************
+    - docker image prune --filter dangling=true -f
+  only:
+    - master
+  tags:
+    - nginx
+
+
