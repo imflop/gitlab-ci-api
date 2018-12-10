@@ -14,7 +14,7 @@ app = Flask(__name__)
 api = Api(app)
 db = redis.StrictRedis(host='localhost', port=6379, db=1)
 env = Environment(loader=FileSystemLoader(TEMPLATE_FOLDER_NAME))
-template = env.get_template('server.tpl')
+
 
 
 class DbMixin:
@@ -81,6 +81,7 @@ class Create(Resource, DbMixin):
             if self.is_branch_exists(branch):
                 project_data = self.get_project_meta_by_branch(branch)
                 port = project_data['port']
+                self._write_data(project_data)
                 response = ResponseObject(code=304, status='Not Modified', ip=ip, port=port,
                                           message='Branch already exists on port')
             else:
@@ -104,6 +105,7 @@ class Create(Resource, DbMixin):
         )
 
     def _write_data(self, data: dict) -> None:
+        template = env.get_template(f'{data["project_name"]}.tpl')
         conf = template.render(**data)
         filename = f'{data["server_name"].split(".")[0]}.{data["server_name"].split(".")[1]}'
 
