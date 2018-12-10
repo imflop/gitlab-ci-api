@@ -16,7 +16,6 @@ db = redis.StrictRedis(host='localhost', port=6379, db=1)
 env = Environment(loader=FileSystemLoader(TEMPLATE_FOLDER_NAME))
 
 
-
 class DbMixin:
 
     def is_ip_exists(self, ip: str) -> bool:
@@ -154,4 +153,4 @@ class Delete(Resource, DbMixin):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False, host='0.0.0.0', port=5000)
