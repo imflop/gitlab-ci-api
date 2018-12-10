@@ -11,7 +11,7 @@ TEMPLATE_FOLDER_NAME = 'nginx_templates'
 FLAG_FOLDER_NAME = 'nginx_flags'
 
 app = Flask(__name__)
-api = Api(app)
+api = Api(app, version='0.0.1', title='Integrate')
 db = redis.StrictRedis(host='localhost', port=6379, db=1)
 env = Environment(loader=FileSystemLoader(TEMPLATE_FOLDER_NAME))
 
@@ -65,8 +65,8 @@ class ResponseObject:
 
 
 @api.route('/api/v1/create/<project>/<ip>')
-@api.param('project', 'Full url of project with branch')
 @api.param('ip', 'The ip address')
+@api.param('project', 'Full url of project with branch, for example: project-name.branch-name.feature.site-name.dev')
 class Create(Resource, DbMixin):
     def get(self, project=None, ip=None) -> dict:
         if project and ip:
@@ -79,6 +79,11 @@ class Create(Resource, DbMixin):
 
             if self.is_branch_exists(branch):
                 project_data = self.get_project_meta_by_branch(branch)
+                # weird
+                if project_name not in project_data:
+                    project_data.update(project_name=project_name)
+                if 'server_name' not in project_data:
+                    project_data.update(server_name=project)
                 port = project_data['port']
                 self._write_data(project_data)
                 response = ResponseObject(code=304, status='Not Modified', ip=ip, port=port,
@@ -106,12 +111,12 @@ class Create(Resource, DbMixin):
     def _write_data(self, data: dict) -> None:
         template = env.get_template(f'{data["project_name"]}.tpl')
         conf = template.render(**data)
-        filename = f'{data["server_name"].split(".")[0]}.{data["server_name"].split(".")[1]}'
+        filename = f'{data["server_name"].split(".")[0]}.{data["server_name"].split(".")[1]}.conf'
 
         if not os.path.exists(CONFIG_FOLDER_NAME):
             os.makedirs(CONFIG_FOLDER_NAME)
 
-        with open(f'{CONFIG_FOLDER_NAME}/{filename}.conf', 'w') as f:
+        with open(f'{CONFIG_FOLDER_NAME}/{filename}', 'w') as f:
             f.write(conf)
             self.__crete_flag_file()
 
