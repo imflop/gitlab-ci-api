@@ -11,8 +11,19 @@ TEMPLATE_FOLDER_NAME = 'nginx_templates'
 FLAG_FOLDER_NAME = 'nginx_flags'
 
 app = Flask(__name__)
-api = Api(app, version='0.0.1', title='Integrate')
-db = redis.StrictRedis(host='localhost', port=6379, db=1)
+api = Api(
+    app,
+    version='0.0.1',
+    title='Integration to Gitlab',
+    prefix='/api/v1',
+    description='A simple giltab integration API',
+    doc='/api/swagger'
+)
+db = redis.StrictRedis(
+    host=os.environ.get('REDIS_HOST', default='localhost'),
+    port=os.environ.get('REDIS_PORT', default=6379),
+    db=os.environ.get('REDIS_DB', default=0)
+)
 env = Environment(loader=FileSystemLoader(TEMPLATE_FOLDER_NAME))
 
 
@@ -64,11 +75,14 @@ class ResponseObject:
         return {k: v for k, v in filter(lambda x: x[1] is not None, vars(self).items())}
 
 
-@api.route('/api/v1/create/<project>/<ip>')
+@api.route('/create/<project>/<ip>')
 @api.param('ip', 'The ip address')
 @api.param('project', 'Full url of project with branch, for example: project-name.branch-name.feature.site-name.dev')
 class Create(Resource, DbMixin):
     def get(self, project=None, ip=None) -> dict:
+        """
+        Create nginx config from template file by project
+        """
         if project and ip:
             raw_data = project.split('.')
             project_name = raw_data[0]
@@ -128,7 +142,7 @@ class Create(Resource, DbMixin):
                 f.write(str(True))
 
 
-@api.route('/api/v1/delete')
+@api.route('/delete')
 class Delete(Resource, DbMixin):
     def delete(self):
         """
@@ -158,4 +172,8 @@ class Delete(Resource, DbMixin):
 
 
 if __name__ == '__main__':
-    app.run(debug=False, host='0.0.0.0', port=5000)
+    app.run(
+        debug=os.environ.get('DEBUG', default=False),
+        host=os.environ.get('SERVER_HOST'),
+        port=os.environ.get('SERVER_PORT')
+    )
