@@ -11,6 +11,7 @@ TEMPLATE_FOLDER_NAME = 'nginx_templates'
 FLAG_FOLDER_NAME = 'nginx_flags'
 
 app = Flask(__name__)
+app.config.from_envvar('API_SETTINGS')
 api = Api(
     app,
     version='0.0.1',
@@ -20,9 +21,9 @@ api = Api(
     doc='/api/swagger'
 )
 db = redis.StrictRedis(
-    host=os.environ.get('REDIS_HOST', default='localhost'),
-    port=os.environ.get('REDIS_PORT', default=6379),
-    db=os.environ.get('REDIS_DB', default=0)
+    host=app.config['REDIS_HOST'],
+    port=app.config['REDIS_PORT'],
+    db=app.config['REDIS_DB']
 )
 env = Environment(loader=FileSystemLoader(TEMPLATE_FOLDER_NAME))
 
@@ -147,7 +148,6 @@ class Delete(Resource, DbMixin):
     def delete(self):
         """
         Delete meta data from redis, also change port status
-        :return: 204 if exists else 404
         """
         ip = api.payload.get('ip')
         branch = api.payload.get('branch')
@@ -173,7 +173,7 @@ class Delete(Resource, DbMixin):
 
 if __name__ == '__main__':
     app.run(
-        debug=os.environ.get('DEBUG', default=False),
-        host=os.environ.get('SERVER_HOST', default='127.0.0.1'),
-        port=os.environ.get('SERVER_PORT', default=5000)
+        debug=app.config['DEBUG'],
+        host=app.config['SERVER_HOST'],
+        port=app.config['SERVER_PORT']
     )
