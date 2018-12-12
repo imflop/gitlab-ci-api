@@ -174,6 +174,6 @@ class Delete(Resource, DbMixin):
 if __name__ == '__main__':
     app.run(
         debug=os.environ.get('DEBUG', default=False),
-        host=os.environ.get('SERVER_HOST'),
-        port=os.environ.get('SERVER_PORT')
+        host=os.environ.get('SERVER_HOST', default='127.0.0.1'),
+        port=os.environ.get('SERVER_PORT', default=5000)
     )
