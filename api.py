@@ -1,14 +1,16 @@
 import os
 import json
 import redis
+import logging
 from datetime import datetime
 from flask import Flask
 from flask_restplus import Api, Resource
 from jinja2 import Environment, FileSystemLoader
 
-CONFIG_FOLDER_NAME = 'nginx_configs'
-TEMPLATE_FOLDER_NAME = 'nginx_templates'
-FLAG_FOLDER_NAME = 'nginx_flags'
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+CONFIG_FOLDER_NAME = os.path.join(APP_ROOT, 'nginx_configs')
+TEMPLATE_FOLDER_NAME = os.path.join(APP_ROOT, 'nginx_templates')
+FLAG_FOLDER_NAME = os.path.join(APP_ROOT, 'nginx_flags')
 
 app = Flask(__name__)
 app.config.from_envvar('API_SETTINGS')
@@ -26,6 +28,7 @@ db = redis.StrictRedis(
     db=app.config['REDIS_DB']
 )
 env = Environment(loader=FileSystemLoader(TEMPLATE_FOLDER_NAME))
+logger = logging.getLogger('API')
 
 
 class DbMixin:
@@ -95,9 +98,9 @@ class Create(Resource, DbMixin):
             if self.is_branch_exists(branch):
                 project_data = self.get_project_meta_by_branch(branch)
                 # weird
-                if project_name not in project_data:
+                if 'project_name' not in project_data:
                     project_data.update(project_name=project_name)
-                if project not in project_data:
+                if 'server_name' not in project_data:
                     project_data.update(server_name=project)
                 port = project_data['port']
                 self._write_data(project_data)
@@ -133,6 +136,7 @@ class Create(Resource, DbMixin):
 
         with open(f'{CONFIG_FOLDER_NAME}/{filename}', 'w') as f:
             f.write(conf)
+            logger.info(f'Config {CONFIG_FOLDER_NAME}/{filename} was created')
             self.__crete_flag_file()
 
     def __crete_flag_file(self) -> None:
