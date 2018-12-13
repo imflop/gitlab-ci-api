@@ -97,7 +97,7 @@ class Create(Resource, DbMixin):
                 # weird
                 if project_name not in project_data:
                     project_data.update(project_name=project_name)
-                if 'server_name' not in project_data:
+                if project not in project_data:
                     project_data.update(server_name=project)
                 port = project_data['port']
                 self._write_data(project_data)
