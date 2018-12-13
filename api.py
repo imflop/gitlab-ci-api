@@ -136,7 +136,7 @@ class Create(Resource, DbMixin):
 
         with open(f'{CONFIG_FOLDER_NAME}/{filename}', 'w') as f:
             f.write(conf)
-            logger.info(f'Config {CONFIG_FOLDER_NAME}/{filename} was created')
+            logger.info('Config was created')
             self.__crete_flag_file()
 
     def __crete_flag_file(self) -> None:
