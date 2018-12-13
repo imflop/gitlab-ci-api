@@ -29,6 +29,8 @@ services:
     build:
       context: ./
       dockerfile: ./app/_CI/Dockerfile
+    environment:
+      - API_SETTINGS=config.cfg
     command: python /app/api.py
     ports:
       - "5000:5000"
