@@ -147,25 +147,31 @@ class Create(Resource, DbMixin):
                 f.write(str(True))
 
 
-@api.route('/delete')
+@api.route('/delete/<project>/<ip>')
+@api.param('ip', 'The ip address')
+@api.param('project', 'Full url of project with branch, for example: project-name.branch-name.feature.site-name.dev')
 class Delete(Resource, DbMixin):
-    def delete(self):
+    def get(self, project=None, ip=None) -> dict:
         """
         Delete meta data from redis, also change port status
         """
-        ip = api.payload.get('ip')
-        branch = api.payload.get('branch')
-        if self.is_branch_exists(branch) and self.is_ip_exists(ip):
-            data = self.get_project_meta_by_branch(branch)
-            port = str(data['port'])
-            ports = self.get_ports_by_ip(ip)
-            ports[port] = True
-            self.set_released_port(ip, ports)
-            self.delete_branch(branch)
-            self._remove_conf(data)
-            response = ResponseObject(code=202, status='Accepted', message='Branch remove, current port release')
+        if project and ip:
+            raw_data = project.split('.')
+            branch = f'{raw_data[2]}/{raw_data[1]}'
+            if self.is_branch_exists(branch) and self.is_ip_exists(ip):
+                data = self.get_project_meta_by_branch(branch)
+                port = str(data['port'])
+                ports = self.get_ports_by_ip(ip)
+                ports[port] = True
+                self.set_released_port(ip, ports)
+                self.delete_branch(branch)
+                self._remove_conf(data)
+                response = ResponseObject(code=202, status='Accepted', message='Branch remove, current port release')
+            else:
+                response = ResponseObject(status='Not Found', code=404)
+            return response.as_dict()
         else:
-            response = ResponseObject(status='Not Found', code=404)
+            response = ResponseObject(code=400, status='Bad Request')
         return response.as_dict()
 
     def _remove_conf(self, data: dict) -> None:

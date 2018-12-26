@@ -45,7 +45,7 @@ If params is missing Response would be
 
 Request DELETE
 
-`http delete localhost:5000/api/v1/delete branch=feature/branch-name, ip=127.0.0.1`
+`http delete localhost:5000/api/v1/delete/project_name.some-branch-name.feature.btc-s.ru/127.0.0.1`
 
 Response
 
